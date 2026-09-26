@@ -70,6 +70,12 @@ async function syncAll(){for(let i=0;i<2;i++)for(const w of windows)await w.atuC
  await syncAll();
  sim.testApp.setView('sbar');sim.render();assert(sim.document.querySelector('#view').textContent.includes('Accepted by provider'));
 
+ // A faculty message pops up for observers without anything to acknowledge.
+ for(const o of [obs1,obs2])o.document.querySelectorAll('.observerToast').forEach(t=>t.remove());
+ faculty.testApp.setView('faculty');faculty.render();
+ faculty.document.getElementById('facultyMessageSubject').value='Check on patient';faculty.document.getElementById('facultyMessageBody').value='Family is at the bedside.';
+ faculty.document.getElementById('facultySendMessageNow').click();await syncAll();
+ for(const o of [obs1,obs2]){o.showNextNotification();assert([...o.document.querySelectorAll('.observerToast')].some(t=>t.textContent.includes('Family is at the bedside.')),'observer sees the faculty message');assert.equal(popups(o).length,0,'nothing to acknowledge');}
  // Reset for a new simulation clears that patient's SBARs.
  faculty.resetToBase(ruth);await syncAll();
  assert(!row.payload.providerNotifications.some(s=>s.patientId===ruth),'reset clears SBARs');

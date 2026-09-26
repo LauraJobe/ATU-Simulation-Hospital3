@@ -11,6 +11,7 @@
 
 * **Release alerts are acknowledged once.** Acknowledge now updates the current shared chart. Previously it updated a copy that the 5-second shared refresh had replaced, so the alert returned and students had to acknowledge it repeatedly. Each computer also remembers what it acknowledged, and a popup already handled on another computer closes itself.
 * **Observer Mode** for debrief-room computers. Observers browse the chart independently and view it read-only. Release notices appear briefly and close on their own. To set a computer up, open the site with `?mode=observer` or use Faculty Live Control → This Computer's Role. The faculty PIN is needed to leave Observer Mode.
+* **Observer notices:** releases and faculty messages open as a large centered popup on observer computers. It closes itself after 15 seconds of on-screen time, with a countdown bar, and has nothing to acknowledge.
 * **Provider Notification (SBAR)** screen. Students send an SBAR (Routine, Urgent or STAT) to the provider.
   * **Faculty:** get a popup to accept it, with an optional provider response. The response reaches the student as a message alert.
   * **Observers:** get a popup to close, wherever they are in the chart. It is the only thing observers need to close.

@@ -91,15 +91,20 @@ function showStudentAlert(){
 }
 
 // Observers: release alerts are brief notices that close on their own.
+// Observers: each release or faculty message pops up in the centre of the screen and closes by itself;
+// the countdown starts only while the page is visible so a notice is not missed in a background tab.
+const OBSERVER_NOTICE_SECONDS=15;
 function showObserverToasts(){
  const seen=readSet(seenKey());let changed=false;
  let stack=document.getElementById('observerToasts');
  for(const n of state.notifications||[]){
   if(seen.has(n.id))continue;seen.add(n.id);changed=true;
   if(!stack){stack=document.createElement('div');stack.id='observerToasts';document.body.appendChild(stack);}
-  const toast=document.createElement('div');toast.className='observerToast';toast.setAttribute('role','status');
-  toast.innerHTML=`<button class="toastClose" aria-label="Close">×</button><b>${esc(n.title)}</b><div class="note">${esc(patientName(n.patientId))}</div><div>${esc(n.body)}</div>`;
-  toast.querySelector('.toastClose').onclick=()=>toast.remove();stack.appendChild(toast);setTimeout(()=>toast.remove(),9000);
+  const toast=document.createElement('div');toast.className='observerToast';toast.setAttribute('role','alert');
+  toast.innerHTML=`<button class="toastClose" aria-label="Close">×</button><div class="toastHead">${esc(n.title)}</div><div class="toastBody"><div class="note">${esc(patientName(n.patientId))}${n.createdAt?` • ${esc(when(n.createdAt))}`:''}</div><div class="toastText">${esc(n.body)}</div><div class="toastTimer"><span></span></div><div class="note toastCountdown">Closes automatically — nothing to acknowledge.</div></div>`;
+  toast.querySelector('.toastClose').onclick=()=>toast.remove();stack.appendChild(toast);
+  let left=OBSERVER_NOTICE_SECONDS;const bar=toast.querySelector('.toastTimer span');
+  const tick=setInterval(()=>{if(!toast.isConnected){clearInterval(tick);return;}if(document.visibilityState==='hidden')return;left--;bar.style.width=Math.max(0,left/OBSERVER_NOTICE_SECONDS*100)+'%';if(left<=0){clearInterval(tick);toast.remove();}},1000);
  }
  if(changed)writeSet(seenKey(),seen);
 }
@@ -184,9 +189,15 @@ function renderSBAR(){
 window.initializeSimulationRoles=function(){
  state.providerNotifications ||= [];
  document.head.insertAdjacentHTML('beforeend',`<style>
-  #observerToasts{position:fixed;top:78px;right:16px;z-index:4000;display:flex;flex-direction:column;gap:8px;max-width:min(360px,calc(100vw - 32px))}
-  .observerToast{background:#fff;border-left:5px solid var(--gold,#c9a227);box-shadow:0 6px 20px #0004;border-radius:6px;padding:10px 30px 10px 12px;position:relative}
-  .observerToast .toastClose{position:absolute;top:4px;right:6px;border:0;background:none;font-size:18px;cursor:pointer;padding:0 4px}
+  #observerToasts{position:fixed;top:90px;left:50%;transform:translateX(-50%);z-index:6000;display:flex;flex-direction:column;gap:10px;width:min(560px,calc(100vw - 32px))}
+  .observerToast{background:#fff;border-radius:8px;box-shadow:0 15px 45px #0006;overflow:hidden;position:relative}
+  .observerToast .toastHead{background:var(--green,#0b4a33);color:#fff;padding:12px 44px 12px 15px;border-bottom:4px solid var(--gold,#c9a227);font-weight:bold;font-size:17px}
+  .observerToast .toastBody{padding:14px 16px}
+  .observerToast .toastText{font-size:16px;margin-top:8px}
+  .observerToast .toastTimer{height:5px;background:#e5eaec;border-radius:3px;margin-top:14px;overflow:hidden}
+  .observerToast .toastTimer span{display:block;height:100%;width:100%;background:var(--gold,#c9a227);transition:width 1s linear}
+  .observerToast .toastCountdown{margin-top:6px}
+  .observerToast .toastClose{position:absolute;top:8px;right:10px;border:0;background:none;color:#fff;font-size:22px;cursor:pointer;padding:0 4px}
   .observerBanner{background:#fff7dc;border:1px solid #e6cf7a;padding:8px 10px;border-radius:6px;margin-bottom:10px}
   body.observerMode #view input:disabled,body.observerMode #view textarea:disabled,body.observerMode #view select:disabled{background:#f1f3f4;color:#555;cursor:not-allowed}
   body.observerMode #view button:disabled{opacity:.45;cursor:not-allowed}
